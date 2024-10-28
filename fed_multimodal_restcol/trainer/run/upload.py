@@ -31,6 +31,22 @@ def parse_args():
         help="pkls for upload",
     )
 
+    parser.add_argument(
+        '--restcol_authtoken',
+        default='',
+        type=str,
+        help='restcol auth token'
+    )
+
+    parser.add_argument(
+        '--restcol_projectid',
+        default='',
+        type=str,
+        help='restcol project id'
+    )
+
+
+
     args = parser.parse_args()
 
     return args
@@ -39,7 +55,9 @@ def parse_args():
 def run():
     args = parse_args()
     print(f"args = {args}")
-    restcol_client = RestcolClient(host_url = args.restcol_host, authorized_token = "", project_id = "1001")
+    restcol_client = RestcolClient(host_url = args.restcol_host,
+                                   authorized_token = args.restcol_authtoken,
+                                   project_id = args.restcol_projectid)
 
     collection_id = restcol_client.create_collection(args.collection_id, "collection for holding dataset")
 
