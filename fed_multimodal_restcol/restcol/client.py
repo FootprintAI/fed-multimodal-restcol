@@ -16,7 +16,7 @@ class RestcolClient:
             host_url: str,
             authorized_token: str,
             project_id: str,
-            bucket_name: str):
+            ):
 
         import os
 
@@ -29,7 +29,7 @@ class RestcolClient:
 
         self.authorized_token = authorized_token
         self.local_cache_dir = "/tmp"
-        self.s3_bucket = bucket_name
+        self.s3_bucket = ENV_STORAGE_BUCKET_NAME
         self.configuration.api_key_prefix['ApiKeyAuth'] = f"Bearer {self.authorized_token}"
         self.project_id = project_id
 
