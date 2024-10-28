@@ -272,15 +272,6 @@ def parse_args():
         help='restcol project id'
     )
 
-    parser.add_argument(
-        '--s3_bucket_name',
-        default='',
-        type=str,
-        help='bucket name for storing data'
-    )
-
-
-
     args = parser.parse_args()
     return args
 
@@ -292,7 +283,7 @@ def run():
     restcol_client = RestcolClient(host_url = args.restcol_host,
                                    authorized_token = args.restcol_authtoken,
                                    project_id = args.restcol_projectid,
-                                   bucket_name = args.s3_bucket_name)
+                                   )
 
 
     device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
