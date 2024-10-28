@@ -16,6 +16,8 @@ class RestcolClient:
             host_url: str,
             authorized_token: str,
             project_id: str,
+            debug: bool = False,
+            local_cache: bool = False,
             ):
 
         import os
@@ -29,8 +31,12 @@ class RestcolClient:
 
         self.authorized_token = authorized_token
         self.local_cache_dir = "/tmp"
+        self.local_cache = local_cache
         self.s3_bucket = ENV_STORAGE_BUCKET_NAME
-        self.configuration.api_key_prefix['ApiKeyAuth'] = f"Bearer {self.authorized_token}"
+        self.configuration.api_key['ApiKeyAuth'] = self.authorized_token
+        self.configuration.api_key_prefix['ApiKeyAuth'] = "Bearer"
+        self.configuration.debug = debug
+        print(f'config: {self.configuration}')
         self.project_id = project_id
 
     def _str2base64str(self, b:str):
@@ -105,6 +111,7 @@ class RestcolClient:
         import pickle
 
         print(f"readdocument: cid={collection_id}, did={document_id}")
+        filename = None
         with openapi_client.ApiClient(self.configuration) as api_client:
             # Create an instance of the API class
             api_instance = openapi_client.DocumentApi(api_client)
@@ -117,13 +124,23 @@ class RestcolClient:
             except ApiException as e:
                 print("Exception when calling CollectionApi->rest_col_service_create_collection: %s\n" % e)
 
-        response = self._get_object(filename)
-        dic_body = pickle.loads(response)
+        if filename:
+            response = self._get_object(filename)
+            return pickle.loads(response)
 
-        return dic_body
+        return {}
 
     def _get_object(self, filename: str):
         import os
+
+        if not self.local_cache:
+            try:
+                response = self.s3_client.get_object(self.s3_bucket, filename)
+                response_data = response.data
+            finally:
+                response.close()
+                response.release_conn()
+            return response_data
 
         self._mkdir(os.path.join(self.local_cache_dir, self.s3_bucket))
 

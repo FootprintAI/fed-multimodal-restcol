@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-docker build -t footprintai/fed-multimodal-restcol:v0.0.1 -f dockerfile .
+tag="v0.0.1"
+docker build -t footprintai/fed-multimodal-restcol:${tag} -f dockerfile .
+docker push footprintai/fed-multimodal-restcol:${tag}
