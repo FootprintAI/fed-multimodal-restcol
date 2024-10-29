@@ -9,6 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from fed_multimodal_restcol.trainer.evaluation import EvalMetric
 
+from flwr.server.strategy.aggregate import aggregate
+
 # logging format
 import logging
 logging.basicConfig(
@@ -462,34 +464,59 @@ class Server(object):
         """
         Returns the average of the weights.
         """
+
         # there are no samples, return
         if len(self.num_samples_list) == 0: 
             return
-        total_num_samples = np.sum(self.num_samples_list)
-        w_avg = copy.deepcopy(self.model_updates[0])
 
-        # calculate weighted updates
-        for key in w_avg.keys():
-            if self.args.fed_alg == 'scaffold':
-                w_avg[key] = torch.div(self.model_updates[0][key], len(self.model_updates))
-            else:
-                w_avg[key] = self.model_updates[0][key]*(self.num_samples_list[0]/total_num_samples)
-        for key in w_avg.keys():
-            for i in range(1, len(self.model_updates)):
-                if self.args.fed_alg == 'scaffold':
-                    w_avg[key] += torch.div(self.model_updates[i][key], len(self.model_updates))
-                else:
-                    w_avg[key] += torch.div(self.model_updates[i][key]*self.num_samples_list[i], total_num_samples)
-        
+        # zip
+        aggregate_tuple = []
+        model_keys = self.model_updates[0].keys()
+        for idx, val in enumerate(self.num_samples_list):
+            layer_list = []
+            for layer in model_keys:
+                layer_list.append(self.model_updates[idx][layer].cpu())
+            aggregate_tuple.append((layer_list, val))
+        w_avg = aggregate(aggregate_tuple)
+
+        # unzip
+        w_avg_layer= {}
+        for idx, layer in enumerate(model_keys):
+            w_avg_layer[layer] = w_avg[idx]
         # server optimization or just load with weights
         if self.args.fed_alg == 'fed_opt':
-            self.update_global(copy.deepcopy(w_avg))
+            self.update_global(copy.deepcopy(w_avg_layer))
         else:
-            self.global_model.load_state_dict(copy.deepcopy(w_avg))
+            self.global_model.load_state_dict(copy.deepcopy(w_avg_layer))
 
-        # update global control if algorithm is scaffold
-        if self.args.fed_alg == 'scaffold':
-            self.update_server_control()
+        ## there are no samples, return
+        #if len(self.num_samples_list) == 0: 
+        #    return
+        #total_num_samples = np.sum(self.num_samples_list)
+        #w_avg = copy.deepcopy(self.model_updates[0])
+
+        ## calculate weighted updates
+        #for key in w_avg.keys():
+        #    if self.args.fed_alg == 'scaffold':
+        #        w_avg[key] = torch.div(self.model_updates[0][key], len(self.model_updates))
+        #    else:
+        #        w_avg[key] = self.model_updates[0][key]*(self.num_samples_list[0]/total_num_samples)
+        #for key in w_avg.keys():
+        #    for i in range(1, len(self.model_updates)):
+        #        if self.args.fed_alg == 'scaffold':
+        #            w_avg[key] += torch.div(self.model_updates[i][key], len(self.model_updates))
+        #        else:
+        #            w_avg[key] += torch.div(self.model_updates[i][key]*self.num_samples_list[i], total_num_samples)
+        #
+        ## server optimization or just load with weights
+        #if self.args.fed_alg == 'fed_opt':
+        #    self.update_global(copy.deepcopy(w_avg))
+        #else:
+        #    self.global_model.load_state_dict(copy.deepcopy(w_avg))
+
+        ## update global control if algorithm is scaffold
+        #if self.args.fed_alg == 'scaffold':
+        #    self.update_server_control()
 
     def update_server_control(self):
         # update server control

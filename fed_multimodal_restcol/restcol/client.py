@@ -33,11 +33,13 @@ class RestcolClient:
         self.local_cache_dir = "/tmp"
         self.local_cache = local_cache
         self.s3_bucket = ENV_STORAGE_BUCKET_NAME
-        self.configuration.api_key['ApiKeyAuth'] = self.authorized_token
-        self.configuration.api_key_prefix['ApiKeyAuth'] = "Bearer"
+        if self.authorized_token:
+            self.configuration.api_key['ApiKeyAuth'] = self.authorized_token
+            self.configuration.api_key_prefix['ApiKeyAuth'] = "Bearer"
         self.configuration.debug = debug
         print(f'config: {self.configuration}')
         self.project_id = project_id
+        print(f'project_id: {self.project_id}')
 
     def _str2base64str(self, b:str):
         return base64.b64encode(b.encode()).decode()
