@@ -5,32 +5,69 @@ reference:
 - fed-multimodal: https://github.com/usc-sail/fed-multimodal/tree/main
 - restcol api: https://github.com/FootprintAI/restcol
 
+#### python path
+
+```
+export PYTHONPATH = $(PWD)
+
+to allow python search path started from current dir.
+```
 
 #### setup steps
-0. login reststore go get its auth token
 
+1. upload dataset
 
-1. use upload.py to upload dataset onto restcol
+```
+// configure s3 storage endpoint
 
-`cd fed_multimodal_restcol/trainer/run`
+export STORAGE_ENDPOINT=<s3-endpoint>
+export STORAGE_BUCKET_NAME=<bucket-name>
+export STORAGE_ACCESS_KEY=<access-key>
+export STORAGE_ACCESS_SECRET=<access-secret>
+```
 
-- upload img data and collect its document id
+// use upload.py script to upload img dataset
+```
+python3 fed_multimodal_restcol/trainer/run/upload.py \
+  --pkls ../../../data/img/dev.pkl ../../../data/img/test.pkl \
+  --restcol_collection_id=crisis-mmd \
+  --restcol_endpoint=<endpoint> \
+  --restcol_authtoken=<authtoken> \
+  --restcol_projectid=<projectid>
 
-`python3 upload.py --collection_id=crisis-mmd --pkls ../../../data/img/dev.pkl ../../../data/img/test.pkl`
+>> docid: 0192d96d-778d-7ef4-b15b-03063b0dc890
 
-- upload text data and collect its document id
+// use upload.py script to upload text dataset
 
-`python3 upload.py --collection_id=crisis-mmd --pkls ../../../data/text/dev.pkl ../../../data/text/test.pkl`
+python3 fed_multimodal_restcol/trainer/run/upload.py \
+  --pkls ../../../data/text/dev.pkl ../../../data/text/test.pkl \
+  --restcol_collection_id=crisis-mmd \
+  --restcol_endpoint=<endpoint> \
+  --restcol_authtoken=<authtoken> \
+  --restcol_projectid=<projectid>
+
+>> docid: docid: 0192d96e-ee67-78fb-8359-388ec4eff8d2
+```
 
 2. run server code with session id (consider each new session represents a new start), the server would be associated with two client (cid1, cid2)
 
 ```
-python3 server.py --session_id=sid1 --client_ids cid1 cid2 --restcol_host=http://storage.demo01.footprint-ai.com
+python3 fed_multimodal_restcol/trainer/run/server.py \
+  --session_id=sid1 \
+  --client_ids cid1 cid2 \
+  --restcol_host=<endpoint> \
+  --restcol_projectid=<projectid> \
+  --restcol_authtoken=<authtoken>
 
 ```
 
 3. run client code with $sid and $client_id
 
 ```
-client.py --session_id=sid1 --client_id=cid1 --dataset_collection_id=crisis-mmd --dataset_img_document_id=0192cca6-2a56-79fc-bfd7-ad30ca49bf66 --dataset_text_document_id=0192cca6-98e1-7c2a-9013-569adbcec9c8
+python3 fed_multimodal_restcol/trainer/run/client.py \
+  --session_id=sid1 \
+  --client_id=cid1 \
+  --dataset_collection_id=crisis-mmd \
+  --dataset_img_document_id=0192d96d-778d-7ef4-b15b-03063b0dc890 \
+  --dataset_text_document_id=0192d96e-ee67-78fb-8359-388ec4eff8d2
 ```
