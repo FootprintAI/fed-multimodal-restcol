@@ -306,9 +306,7 @@ def run():
     shuffle = False
 
     server_collection_id = make_server_collection_id(args.session_id)
-    client_collection_id = make_client_collection_id(args.session_id, args.client_id)
-    restcol_client.create_collection(client_collection_id, "client collection binded to session id + client id")
-    print("server collection: {server_collection_id}, cliet collection: {client_collection_id}")
+    print("server collection: {server_collection_id}")
 
     # loss function
     criterion = nn.NLLLoss().to(device)
@@ -324,6 +322,7 @@ def run():
     )
     t2 = time.time()
     print(f"inited dataloader, {round(t2-t1)}")
+    client_id = args.client_id
 
     for epoch in range(int(args.num_epochs)):
         print(f'client.epoch: {epoch}')
@@ -347,15 +346,17 @@ def run():
         print(f'client , update weights')
         client.update_weights()
 
+        client_epoch_file = f"{client_id}-epoch-{epoch}"
+
         print(f'client , push weights, file:{epoch_file}')
         # update latest model to server
         restcol_client.write_document(
-                client_collection_id, 
+                server_collection_id, 
                 {'model': client.get_parameters(),
                  'sample': client.result['sample'],
                  'result': client.result,
                  },
-                epoch_file, 
+                client_epoch_file, 
         )
         del client
 
