@@ -24,10 +24,10 @@ export STORAGE_ENDPOINT=<s3-endpoint>
 export STORAGE_BUCKET_NAME=<bucket-name>
 export STORAGE_ACCESS_KEY=<access-key>
 export STORAGE_ACCESS_SECRET=<access-secret>
-```
+
 
 // use upload.py script to upload img dataset
-```
+
 python3 fed_multimodal_restcol/trainer/run/upload.py \
   --pkls ../../../data/img/dev.pkl ../../../data/img/test.pkl \
   --restcol_collection_id=crisis-mmd \
