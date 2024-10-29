@@ -298,10 +298,10 @@ def run():
         # wait for client model
         client_updates_list = []
         for client_id in args.client_ids:
-            client_collection_id = make_client_collection_id(args.session_id, client_id)
-            # client_id is collection id
-            wait_doc_exists_until(restcol_client, client_collection_id, epoch_file, 1000)
-            client_updates = restcol_client.read_document(client_collection_id, epoch_file)
+            client_epoch_file = f"{client_id}-epoch-{epoch}"
+            wait_doc_exists_until(restcol_client, server_collection_id, client_epoch_file, 1000)
+            client_updates = restcol_client.read_document(server_collection_id,
+                                                          client_epoch_file)
             # client_updates = {
             #  "model": client.get_parameters(),
             #  "samples": int,
