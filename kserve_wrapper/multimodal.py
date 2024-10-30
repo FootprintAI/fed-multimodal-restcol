@@ -29,7 +29,7 @@ def base64encode(im) -> str:
     return base64.b64encode(im_encode)
 
 class MultiModalModel(kserve.Model):
-    def __init__(self, name: str, name: str):
+    def __init__(self, name: str):
         super().__init__(name)
         self.name = name
 
@@ -66,8 +66,8 @@ class MultiModalModel(kserve.Model):
         # }
 
         im1 = base64decode(inputs[0]["image_bytes"]["b64"])
-		h, w, c = im1.shape
-		text = inputs[0]["text"]
+        h, w, c = im1.shape
+        text = inputs[0]["text"]
 
         return {
                 "predictions": [
@@ -78,7 +78,7 @@ class MultiModalModel(kserve.Model):
                             "w": w,
                             "c": c,
                         },
-						"text": text,
+                        "text": text,
                     },
                     "key": key,
                     "type": "multimodal-detector",
